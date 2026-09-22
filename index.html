@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FamilyHub — Private Family</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--bg:#f4f6fb;--card:#fff;--ink:#182033;--muted:#687286;--line:#e4e8f0;--p:#4f46e5;--p2:#eef2ff;--danger:#dc2626;--ok:#16a34a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,Arial}button,input,textarea{font:inherit}button{cursor:pointer}
+.hidden{display:none!important}.auth{min-height:100vh;display:grid;place-items:center;padding:20px}.authbox{width:min(430px,100%);background:white;border:1px solid var(--line);border-radius:24px;padding:28px;box-shadow:0 18px 50px #19213b18}
+.logo{font-size:26px;font-weight:900}.logo i{font-style:normal;color:var(--p)}.muted{color:var(--muted);font-size:13px}.field{margin:12px 0}.field label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}.field input,.field textarea{width:100%;padding:12px;border:1px solid var(--line);border-radius:11px;outline:0}.primary,.secondary,.danger{border-radius:11px;padding:11px 14px;font-weight:750}.primary{background:var(--p);color:white}.secondary{background:var(--p2);color:#3730a3}.danger{background:#fee2e2;color:#991b1b}.full{width:100%}.switch{text-align:center;margin-top:14px;font-size:13px;color:var(--muted)}.switch b{color:var(--p);cursor:pointer}.error{color:var(--danger);font-size:13px;margin-top:10px}
+.layout{display:grid;grid-template-columns:235px 1fr;min-height:100vh}.side{background:#101526;color:#cbd3e4;padding:18px;position:sticky;top:0;height:100vh}.side .logo{color:#fff;margin-bottom:24px}.nav button{width:100%;background:transparent;color:#b9c2d5;text-align:left;padding:12px;border-radius:10px;margin:2px 0}.nav button:hover,.nav button.active{background:#202943;color:#fff}.family{margin-top:24px;padding:13px;border:1px solid #ffffff18;border-radius:13px;background:#ffffff08}.main{min-width:0}.top{height:70px;background:white;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;padding:0 22px;position:sticky;top:0;z-index:4}.content{max-width:1100px;margin:auto;padding:22px}.avatar{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:#e0e7ff;color:#3730a3;font-weight:850}.right{display:flex;align-items:center;gap:9px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.card{background:white;border:1px solid var(--line);border-radius:17px;padding:18px}.stat{font-size:29px;font-weight:900}.section{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}.list{display:grid;gap:9px}.item{background:white;border:1px solid var(--line);border-radius:13px;padding:12px;display:flex;justify-content:space-between;align-items:center;gap:10px}.photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:12px}.photo{aspect-ratio:1;border-radius:14px;overflow:hidden;background:#e8ecf4;position:relative}.photo img{width:100%;height:100%;object-fit:cover}.chat{height:calc(100vh - 115px);display:flex;flex-direction:column}.messages{flex:1;overflow:auto;background:#f9faff;border:1px solid var(--line);border-radius:15px;padding:14px}.bubble{max-width:75%;background:white;border:1px solid var(--line);border-radius:14px;padding:9px 11px;margin:7px 0}.bubble.mine{margin-left:auto;background:#ebe9ff}.bubble small{display:block;color:var(--muted);font-size:10px;margin-bottom:3px}.composer{display:flex;gap:8px;margin-top:9px}.composer input{flex:1;border:1px solid var(--line);border-radius:11px;padding:12px}.call{position:fixed;inset:0;background:#080b14ed;z-index:20;color:white;display:grid;place-items:center;padding:15px}.callbox{width:min(950px,96vw);background:#111827;border-radius:20px;padding:16px}.videos{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}.videos video{width:100%;aspect-ratio:16/9;background:#000;border-radius:13px;object-fit:cover}.callbar{display:flex;justify-content:center;gap:8px;margin-top:12px}.pill{font-size:11px;background:#dcfce7;color:#166534;border-radius:999px;padding:5px 8px;font-weight:800}
+@media(max-width:780px){.layout{grid-template-columns:1fr}.side{position:fixed;bottom:0;left:0;right:0;height:auto;padding:7px;z-index:10}.side .logo,.family{display:none}.nav{display:flex;justify-content:space-around}.nav button{width:auto;font-size:0;padding:11px}.nav button::first-letter{font-size:19px}.main{padding-bottom:62px}.grid{grid-template-columns:1fr}.videos{grid-template-columns:1fr}.content{padding:14px}.top{padding:0 13px}}
+</style>
+</head>
+<body>
+<div id="auth" class="auth">
+ <div class="authbox">
+  <div class="logo">Family<i>Hub</i> 🔒</div>
+  <p class="muted">A private online space for your family.</p>
+  <div id="signin">
+   <div class="field"><label>Email</label><input id="email" type="email" autocomplete="email"></div>
+   <div class="field"><label>Password</label><input id="password" type="password" autocomplete="current-password"></div>
+   <button class="primary full" onclick="signIn()">Sign in</button>
+   <div class="switch">New member? <b onclick="show('signup')">Create account</b></div>
+  </div>
+  <div id="signup" class="hidden">
+   <div class="field"><label>Name</label><input id="name"></div>
+   <div class="field"><label>Email</label><input id="semail" type="email"></div>
+   <div class="field"><label>Password (6+ characters)</label><input id="spass" type="password"></div>
+   <div class="field"><label>Family invite code</label><input id="invite" placeholder="Get this from the family admin"></div>
+   <button class="primary full" onclick="signUp()">Join family</button>
+   <div class="switch">Already have an account? <b onclick="show('signin')">Sign in</b></div>
+  </div>
+  <div id="authmsg"></div>
+ </div>
+</div>
+
+<div id="app" class="layout hidden">
+ <aside class="side">
+  <div class="logo">Family<i>Hub</i> 🔒</div>
+  <div class="nav">
+   <button id="n-home" onclick="page('home')">🏠 Home</button>
+   <button id="n-chat" onclick="page('chat')">💬 Chat</button>
+   <button id="n-photos" onclick="page('photos')">📸 Photos</button>
+   <button id="n-tasks" onclick="page('tasks')">✅ Tasks</button>
+   <button id="n-calls" onclick="page('calls')">📞 Calls</button>
+   <button id="n-members" onclick="page('members')">👨‍👩‍👧 Members</button>
+  </div>
+  <div class="family"><div class="muted">PRIVATE FAMILY</div><b id="familyTitle">Loading…</b><div class="muted" id="role"></div></div>
+ </aside>
+ <main class="main">
+  <header class="top"><div><b id="pageTitle">Home</b><div class="muted" id="welcome"></div></div><div class="right"><div class="avatar" id="avatar">F</div><button class="danger" onclick="signOut()">Logout</button></div></header>
+  <div class="content" id="content"></div>
+ </main>
+</div>
+
+<div id="callModal" class="call hidden">
+ <div class="callbox">
+  <div class="section"><b id="callTitle">Family call</b><span id="callState" class="pill">Connecting…</span></div>
+  <div class="videos"><video id="remoteVideo" autoplay playsinline></video><video id="localVideo" autoplay muted playsinline></video></div>
+  <div class="callbar"><button class="secondary" onclick="mute()">🎙️ Mic</button><button class="secondary" onclick="camera()">📹 Camera</button><button class="danger" onclick="hangup()">✕ End</button></div>
+ </div>
+</div>
+
+<script>
+/* ====== PUT YOUR SUPABASE VALUES HERE ====== */
+const SUPABASE_URL = "https://namanupvmrmjjdqnblgl.supabase.co/rest/v1/";
+const SUPABASE_ANON_KEY = "https://namanupvmrmjjdqnblgl.supabase.co/rest/v1/";
+/* ============================================ */
+
+let db, session, profile, family, channel, localStream, peer;
+const rtcConfig={iceServers:[{urls:"stun:stun.l.google.com:19302"},{urls:"stun:stun1.l.google.com:19302"}]};
+
+function ready(){return SUPABASE_URL.startsWith("https://") && !SUPABASE_ANON_KEY.startsWith("PASTE_")}
+function esc(x){return String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function initials(x){return (x||"F").split(/\s+/).map(v=>v[0]).join("").slice(0,2).toUpperCase()}
+function show(x){signin.classList.toggle("hidden",x!=="signin");signup.classList.toggle("hidden",x!=="signup");authmsg.textContent=""}
+function authError(e){authmsg.innerHTML='<div class="error">'+esc(e.message||e)+'</div>'}
+function needConfig(){if(!ready()){authmsg.innerHTML='<div class="error">Add your Supabase URL and anon key in index.html first.</div>';return true}return false}
+
+async function boot(){
+ if(needConfig())return;
+ db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+ const {data}=await db.auth.getSession(); session=data.session;
+ if(session) await enter(); 
+ db.auth.onAuthStateChange(async(_e,s)=>{session=s;if(s&&!profile)await enter()})
+}
+async function signIn(){try{if(needConfig())return;const {error}=await db.auth.signInWithPassword({email:email.value.trim(),password:password.value});if(error)throw error}catch(e){authError(e)}}
+async function signUp(){
+ try{if(needConfig())return;
+  const n=name.value.trim(),e=semail.value.trim(),p=spass.value,c=invite.value.trim();
+  if(!n||!e||p.length<6||!c)throw new Error("Fill every field.");
+  const {data,error}=await db.auth.signUp({email:e,password:p,options:{data:{display_name:n}}});if(error)throw error;
+  if(!data.user)throw new Error("Check your email to confirm the account, then sign in.");
+  const {data:r,error:re}=await db.rpc("join_family",{p_code:c,p_name:n});if(re)throw re;
+  alert("You joined "+r.name+". You can now sign in.");show("signin");
+ }catch(e){authError(e)}
+}
+async function signOut(){await db.auth.signOut();location.reload()}
+async function enter(){
+ const {data:p,error}=await db.from("profiles").select("*").eq("id",session.user.id).single();if(error){authError(error);return}
+ profile=p;family=(await db.from("families").select("*").eq("id",p.family_id).single()).data;
+ auth.classList.add("hidden");app.classList.remove("hidden");familyTitle.textContent=family.name;role.textContent=profile.role==="admin"?"Administrator":"Family member";welcome.textContent="Welcome, "+profile.display_name;avatar.textContent=initials(profile.display_name);
+ subscribe();page("home")
+}
+function subscribe(){
+ channel=db.channel("family-"+family.id)
+ .on("postgres_changes",{event:"*",schema:"public",table:"messages",filter:"family_id=eq."+family.id},()=>{if(document.getElementById("pageTitle").textContent==="Family Chat")renderChat()})
+ .on("postgres_changes",{event:"*",schema:"public",table:"tasks",filter:"family_id=eq."+family.id},()=>{if(document.getElementById("pageTitle").textContent==="Tasks & Work")renderTasks()})
+ .on("postgres_changes",{event:"*",schema:"public",table:"photos",filter:"family_id=eq."+family.id},()=>{if(document.getElementById("pageTitle").textContent==="Family Photos")renderPhotos()})
+ .on("broadcast",{event:"signal"},({payload})=>handleSignal(payload))
+ .subscribe()
+}
+function page(p){document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));document.getElementById("n-"+p).classList.add("active");const t={home:"Home",chat:"Family Chat",photos:"Family Photos",tasks:"Tasks & Work",calls:"Calls",members:"Family Members"};pageTitle.textContent=t[p];({home:renderHome,chat:renderChat,photos:renderPhotos,tasks:renderTasks,calls:renderCalls,members:renderMembers}[p])()}
+async function counts(){const [m,t,ph,u]=await Promise.all([db.from("messages").select("id",{count:"exact",head:true}).eq("family_id",family.id),db.from("tasks").select("id",{count:"exact",head:true}).eq("family_id",family.id).eq("done",false),db.from("photos").select("id",{count:"exact",head:true}).eq("family_id",family.id),db.from("profiles").select("id",{count:"exact",head:true}).eq("family_id",family.id)]);return[m.count||0,t.count||0,ph.count||0,u.count||0]}
+async function renderHome(){const [m,t,p,u]=await counts();content.innerHTML=`<div class="section"><div><h2 style="margin:0">Family dashboard</h2><div class="muted">Private, online and synchronized.</div></div><button class="primary" onclick="page('tasks')">+ Give work</button></div><div class="grid"><div class="card"><div class="muted">Members</div><div class="stat">${u}</div></div><div class="card"><div class="muted">Pending tasks</div><div class="stat">${t}</div></div><div class="card"><div class="muted">Shared photos</div><div class="stat">${p}</div></div></div><div style="height:14px"></div><div class="card"><b>Quick actions</b><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="secondary" onclick="page('chat')">💬 Chat</button><button class="secondary" onclick="page('photos')">📸 Photos</button><button class="secondary" onclick="page('calls')">📹 Call</button><button class="secondary" onclick="page('tasks')">✅ Tasks</button></div></div>`}
+async function renderChat(){const {data,error}=await db.from("messages").select("*,profiles(display_name)").eq("family_id",family.id).order("created_at",{ascending:true});if(error)return content.innerHTML=esc(error.message);content.innerHTML=`<div class="chat"><div class="messages" id="msgs">${data.map(m=>`<div class="bubble ${m.user_id===session.user.id?"mine":""}"><small>${esc(m.profiles?.display_name||"Family")} • ${new Date(m.created_at).toLocaleString()}</small>${esc(m.body)}</div>`).join("")}</div><div class="composer"><input id="chatText" placeholder="Write a family message…" onkeydown="if(event.key==='Enter')sendMessage()"><button class="primary" onclick="sendMessage()">Send</button></div></div>`;msgs.scrollTop=msgs.scrollHeight}
+async function sendMessage(){const body=chatText.value.trim();if(!body)return;const {error}=await db.from("messages").insert({family_id:family.id,user_id:session.user.id,body});if(error)alert(error.message);else renderChat()}
+async function renderPhotos(){const {data,error}=await db.from("photos").select("*").eq("family_id",family.id).order("created_at",{ascending:false});if(error)return content.innerHTML=esc(error.message);content.innerHTML=`<div class="section"><div><h2 style="margin:0">Family Photos</h2><div class="muted">Private storage — family members only.</div></div><label class="primary">📤 Share photo<input hidden type="file" accept="image/*" multiple onchange="uploadPhotos(event)"></label></div><div class="photos">${data.length?data.map(p=>`<div class="photo"><img src="${esc(p.url)}"><button class="danger" style="position:absolute;right:6px;top:6px;padding:5px" onclick="deletePhoto('${p.id}','${esc(p.path)}')">✕</button></div>`).join(""):'<div class="muted">No photos yet.</div>'}</div>`}
+async function uploadPhotos(e){for(const f of e.target.files){if(f.size>10*1024*1024){alert(f.name+" is larger than 10MB.");continue}const path=family.id+"/"+crypto.randomUUID()+"-"+f.name.replace(/[^a-zA-Z0-9._-]/g,"_");const up=await db.storage.from("family-photos").upload(path,f,{contentType:f.type});if(up.error){alert(up.error.message);continue}const {data:url}=db.storage.from("family-photos").getPublicUrl(path);const {error}=await db.from("photos").insert({family_id:family.id,user_id:session.user.id,path,url:url.publicUrl});if(error)alert(error.message)}e.target.value="";renderPhotos()}
+async function deletePhoto(id,path){if(!confirm("Delete this photo?"))return;await db.storage.from("family-photos").remove([path]);await db.from("photos").delete().eq("id",id);renderPhotos()}
+async function getMembers(){return (await db.from("profiles").select("*").eq("family_id",family.id).order("display_name")).data||[]}
+async function renderTasks(){const [tasks,members]=await Promise.all([db.from("tasks").select("*,profiles(display_name)").eq("family_id",family.id).order("created_at",{ascending:false}),getMembers()]);content.innerHTML=`<div class="section"><div><h2 style="margin:0">Tasks & Work</h2><div class="muted">Assign work to family members.</div></div><button class="primary" onclick='newTask(${JSON.stringify(members.map(x=>({id:x.id,name:x.display_name})).replaceAll("'",""))})'>+ Assign work</button></div><div class="list">${(tasks.data||[]).map(t=>`<div class="item"><div><b style="${t.done?"text-decoration:line-through;opacity:.5":""}">${esc(t.title)}</b><div class="muted">Assigned to ${esc(t.profiles?.display_name||"Family")}</div></div><div style="display:flex;gap:6px"><button class="secondary" onclick="toggleTask('${t.id}',${!t.done})">${t.done?"Undo":"Done"}</button>${profile.role==="admin"?`<button class="danger" onclick="removeTask('${t.id}')">✕</button>`:""}</div></div>`).join("")||'<div class="muted">No tasks.</div>'}</div>`}
+async function newTask(members){const title=prompt("What work should be done?");if(!title?.trim())return;const who=prompt("Enter member name:\\n"+members.map(x=>x.name).join("\\n"),profile.display_name);const found=members.find(x=>x.name.toLowerCase()===String(who).toLowerCase())||members.find(x=>x.name===profile.display_name);const {error}=await db.from("tasks").insert({family_id:family.id,created_by:session.user.id,assigned_to:found.id,title:title.trim()});if(error)alert(error.message);renderTasks()}
+async function toggleTask(id,done){const {error}=await db.from("tasks").update({done}).eq("id",id);if(error)alert(error.message);renderTasks()}
+async function removeTask(id){if(confirm("Delete this task?")){await db.from("tasks").delete().eq("id",id);renderTasks()}}
+async function renderMembers(){const ms=await getMembers();content.innerHTML=`<div class="section"><div><h2 style="margin:0">Family Members</h2><div class="muted">Only members of ${esc(family.name)} can see this list.</div></div><button class="secondary" onclick="alert('Family invite code: '+${JSON.stringify(family.invite_code)})">🔗 Show invite code</button></div><div class="list">${ms.map(m=>`<div class="item"><div class="right"><div class="avatar">${initials(m.display_name)}</div><div><b>${esc(m.display_name)}</b><div class="muted">${esc(m.email||"")}</div></div></div><span class="pill">${m.role==="admin"?"ADMIN":"FAMILY"}</span></div>`).join("")}</div>`}
+function renderCalls(){content.innerHTML=`<div class="card"><h2 style="margin-top:0">Family Calls</h2><div class="muted">Choose a family member. WebRTC connects the two devices directly after the private signaling handshake.</div><div style="height:12px"></div><div class="list" id="callMembers"></div></div>`;getMembers().then(ms=>{callMembers.innerHTML=ms.filter(x=>x.id!==profile.id).map(m=>`<div class="item"><div class="right"><div class="avatar">${initials(m.display_name)}</div><b>${esc(m.display_name)}</b></div><div style="display:flex;gap:6px"><button class="secondary" onclick="startCall('${m.id}',false)">📞 Audio</button><button class="primary" onclick="startCall('${m.id}',true)">📹 Video</button></div></div>`).join("")||'<div class="muted">Add another family member to make a call.</div>'})}
+
+async function startCall(target,video){
+ try{
+  localStream=await navigator.mediaDevices.getUserMedia({audio:true,video});
+  localVideo.srcObject=localStream;remoteVideo.srcObject=null;callTitle.textContent=video?"Video call":"Audio call";callState.textContent="Calling…";callModal.classList.remove("hidden");
+  peer=new RTCPeerConnection(rtcConfig);localStream.getTracks().forEach(t=>peer.addTrack(t,localStream));
+  peer.ontrack=e=>remoteVideo.srcObject=e.streams[0];
+  peer.onicecandidate=e=>{if(e.candidate)signal(target,{type:"candidate",candidate:e.candidate})};
+  const offer=await peer.createOffer();await peer.setLocalDescription(offer);signal(target,{type:"offer",offer,video});
+ }catch(e){alert("Call could not start: "+e.message)}
+}
+async function signal(target,payload){channel.send({type:"broadcast",event:"signal",payload:{from:profile.id,to:target,...payload}})}
+async function handleSignal(x){
+ if(x.to!==profile.id)return;
+ try{
+  if(x.type==="offer"){await acceptOffer(x)}
+  else if(x.type==="answer"){await peer.setRemoteDescription(x.answer);callState.textContent="Connected"}
+  else if(x.type==="candidate"&&peer){await peer.addIceCandidate(x.candidate)}
+ }catch(e){console.error(e)}
+}
+async function acceptOffer(x){
+ localStream=await navigator.mediaDevices.getUserMedia({audio:true,video:!!x.video});localVideo.srcObject=localStream;callTitle.textContent=x.video?"Incoming video call":"Incoming audio call";callState.textContent="Connected";callModal.classList.remove("hidden");
+ peer=new RTCPeerConnection(rtcConfig);localStream.getTracks().forEach(t=>peer.addTrack(t,localStream));peer.ontrack=e=>remoteVideo.srcObject=e.streams[0];peer.onicecandidate=e=>{if(e.candidate)signal(x.from,{type:"candidate",candidate:e.candidate})};
+ await peer.setRemoteDescription(x.offer);const ans=await peer.createAnswer();await peer.setLocalDescription(ans);await signal(x.from,{type:"answer",answer:ans});
+}
+function mute(){const t=localStream?.getAudioTracks()[0];if(t)t.enabled=!t.enabled}
+function camera(){const t=localStream?.getVideoTracks()[0];if(t)t.enabled=!t.enabled}
+function hangup(){localStream?.getTracks().forEach(t=>t.stop());peer?.close();localStream=null;peer=null;localVideo.srcObject=null;remoteVideo.srcObject=null;callModal.classList.add("hidden")}
+boot();
+</script>
+</body>
+</html>
